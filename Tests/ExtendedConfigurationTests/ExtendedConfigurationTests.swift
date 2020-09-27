@@ -62,6 +62,36 @@ final class ExtendedConfigurationTests: XCTestCase {
         XCTAssertEqual("stringValue03", app.settings.getString(for: "group02.key03"))
         XCTAssertEqual(321, app.settings.getInt(for: "group02.key04"))
     }
+    
+    func testCustomConfigurationShouldBeReturnedForKey() throws {
+        // Arrange.
+        try createSettingsFile(fileName: "configuration.json")
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        // Act.
+        app.settings.set(AppModel(name: "name01", version: "1.0.0"), forKey: "customkey")
+        let appModel = app.settings.get(AppModel.self, for: "customkey")
+        
+        // Assert.
+        XCTAssertEqual("name01", appModel?.name)
+        XCTAssertEqual("1.0.0", appModel?.version)
+    }
+    
+    func testCustomConfigurationShouldBeReturnedForType() throws {
+        // Arrange.
+        try createSettingsFile(fileName: "configuration.json")
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        // Act.
+        app.settings.set(AppModel(name: "name02", version: "2.0.0"), for: AppModel.self)
+        let appModel = app.settings.get(AppModel.self)
+        
+        // Assert.
+        XCTAssertEqual("name02", appModel?.name)
+        XCTAssertEqual("2.0.0", appModel?.version)
+    }
         
     private func createSettingsFile(fileName: String) throws {
         let content = """

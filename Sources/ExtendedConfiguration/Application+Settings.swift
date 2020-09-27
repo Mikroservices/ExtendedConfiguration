@@ -24,10 +24,10 @@ extension Application {
         }
         
         public struct Configuration {
-            public var items: [String: Any] = [:]
-            
-            public mutating func appendOrReplace(key: String, value: Any) {
-                self.items[key] = value
+            internal var items: [String: Any] = [:]
+                        
+            public subscript(index: String) -> Any? {
+                self.items[index]
             }
         }
                 
@@ -63,7 +63,7 @@ extension Application {
                 }
                 
                 jsonObject.forEach { (key: String, value: Any) in
-                    self.append(jsonKey: key, jsonValue: value)
+                    self.set(value, forKey: key)
                 }
                 
                 break
@@ -73,27 +73,49 @@ extension Application {
                 case .withPrefix(let prefix):
                     ProcessInfo.processInfo.environment.forEach { (key: String, value: String) in
                         if key.starts(with: prefix) {
-                            self.configuration.appendOrReplace(key: key, value: value)
+                            self.configuration.items[key] = value
                         }
                     }
                 default:
                     ProcessInfo.processInfo.environment.forEach { (key: String, value: String) in
-                        self.configuration.appendOrReplace(key: key, value: value)
+                        self.configuration.items[key] = value
                     }
                 }
            
                 break
             }
         }
-        
-        private func append(jsonKey: String, jsonValue: Any) {
-            if let jsonObject = jsonValue as? [String: Any] {
+
+        public func set(_ setting: Any, forKey jsonKey: String) {
+            if let jsonObject = setting as? [String: Any] {
                 jsonObject.forEach { (key: String, value: Any) in
-                    self.append(jsonKey: jsonKey + "." + key, jsonValue: value)
+                    self.set(value, forKey: jsonKey + "." + key)
                 }
             } else {
-                self.configuration.appendOrReplace(key: jsonKey, value: jsonValue)
+                self.configuration.items[jsonKey] = setting
             }
+        }
+        
+        public func set<T>(_ setting: Any, for type: T.Type) {
+            let key = String(describing: T.self)
+            self.set(setting, forKey: key)
+        }
+
+        public func get<T>(_ type: T.Type) -> T? {
+            let key = String(describing: T.self)
+            return self.get(type, for: key)
+        }
+        
+        public func get<T>(_ type: T.Type, for key: String) -> T? {
+            return self.configuration.items[key] as? T
+        }
+
+        public func get<T>(_ type: T.Type, for key: String, withDefault defaultValue: T) -> T? {
+            if let value = self.configuration.items[key] as? T {
+                return value
+            }
+            
+            return defaultValue
         }
         
         public func getString(for key: String) -> String? {
