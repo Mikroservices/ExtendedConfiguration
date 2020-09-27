@@ -29,6 +29,10 @@ extension Application {
             public subscript(index: String) -> Any? {
                 self.items[index]
             }
+            
+            public func all() -> [String: Any] {
+                return items
+            }
         }
                 
         struct SettingsKey: StorageKey {
