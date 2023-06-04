@@ -76,18 +76,28 @@ extension Application {
                 switch filtr {
                 case .withPrefix(let prefix):
                     ProcessInfo.processInfo.environment.forEach { (key: String, value: String) in
-                        if key.starts(with: prefix) {
-                            self.configuration.items[key] = value
+                        let jsonKey = self.getConfigurationKey(basedOn: key)
+                        if jsonKey.starts(with: prefix) {
+                            self.configuration.items[jsonKey] = value
                         }
                     }
                 default:
                     ProcessInfo.processInfo.environment.forEach { (key: String, value: String) in
-                        self.configuration.items[key] = value
+                        let jsonKey = self.getConfigurationKey(basedOn: key)
+                        self.configuration.items[jsonKey] = value
                     }
                 }
            
                 break
             }
+        }
+        
+        private func getConfigurationKey(basedOn key: String) -> String {
+            let keyDictionary = self.configuration.all().map { (key: String, value: Any) in
+                (normalized: key.replacingOccurrences(of: ".", with: "_").uppercased(), jsonKey: key)
+            }
+            
+            return keyDictionary.first(where: { $0.normalized == key})?.jsonKey ?? key
         }
 
         public func set(_ setting: Any, forKey jsonKey: String) {

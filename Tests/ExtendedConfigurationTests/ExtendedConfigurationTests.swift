@@ -9,6 +9,7 @@ final class ExtendedConfigurationTests: XCTestCase {
         try createSettingsFileForTestting(fileName: "appsettings.testing.json")
         Environment.process[dynamicMember: "env.key03"] = "System environment"
         Environment.process[dynamicMember: "env.key04"] = 999
+        Environment.process[dynamicMember: "ENV_KEY05"] = "http://somedomein.com"
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -16,7 +17,7 @@ final class ExtendedConfigurationTests: XCTestCase {
         try app.settings.load([
             .jsonFile("appsettings.json", optional: false),
             .jsonFile("appsettings.\(app.environment.name).json", optional: true),
-            .environmentVariables(.withPrefix("env"))
+            .environmentVariables(.withPrefix("env."))
         ])
         
         // Assert.
@@ -28,6 +29,7 @@ final class ExtendedConfigurationTests: XCTestCase {
         XCTAssertEqual(321, app.settings.getInt(for: "group02.key04"))
         XCTAssertEqual("System environment", app.settings.getString(for: "env.key03"))
         XCTAssertEqual(999, app.settings.getInt(for: "env.key04"))
+        XCTAssertEqual("http://somedomein.com", app.settings.getString(for: "env.key05"))
     }
     
     func testConfigurationShouldThrowExceptionWhenRequiredFileNotExists() throws {
@@ -108,7 +110,8 @@ final class ExtendedConfigurationTests: XCTestCase {
             },
             "env": {
                 "key03": "stringValue03",
-                "key04": 321
+                "key04": 321,
+                "key05": "http://localhost"
             }
         }
         """
